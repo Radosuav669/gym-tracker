@@ -269,7 +269,7 @@
             .eq('exercise_id', exerciseId)
             .order('workout_date', { ascending: false })
             .order('set_number', { ascending: true })
-            .limit(3); // Fetching last 3 series for overview
+            .limit(5); // Fetching last 5 series for overview
 
         const historyDiv = document.getElementById(`history-${exerciseId}`);
         if (data && data.length > 0) {
