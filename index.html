@@ -54,7 +54,20 @@
         }
         .series-inputs { display: flex; gap: 5px; align-items: center; }
         .series-inputs input { width: 50px; text-align: center; padding: 6px; margin: 0; }
-        .btn-status { padding: 6px 10px; font-size: 14px; margin: 0 2px; }
+        .btn-status { 
+            padding: 6px 12px;
+            font-size: 14px;   
+            margin: 0 4px; 
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            line-height: 1.2;
+        }
+        .btn-status:active { opacity: 0.7; }
+        .btn-success { background: #2ecc71; }
+        .btn-fail { background: #e74c3c; }
         .btn-success { background: var(--success); }
         .btn-fail { background: var(--fail); }
         .logged-indicator { font-size: 12px; color: #888; text-align: center; margin-top: 2px; }
@@ -190,8 +203,8 @@
                             <input type="number" id="r-${ex.id}-${i}" placeholder="reps">
                         </div>
                         <div>
-                            <button class="btn-status btn-success" onclick="saveSeries(${ex.id}, ${i}, 'Success')">✅</button>
-                            <button class="btn-status btn-fail" onclick="saveSeries(${ex.id}, ${i}, 'Fail')">❌</button>
+                            <button class="btn-status btn-success" onclick="saveSeries(${ex.id}, ${i}, 'Success')">✓</button>
+                            <button class="btn-status btn-fail" onclick="saveSeries(${ex.id}, ${i}, 'Fail')">✕</button>
                         </div>
                     </div>
                 `;
