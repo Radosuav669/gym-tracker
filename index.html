@@ -136,10 +136,7 @@
         const todayName = days[now.getDay()];
         const weekOption = getWeekOption();
         
-        document.getElementById('week-info').innerText = `Week: ${weekOption} | Today: ${todayName}`;
-        document.getElementById('today-title').innerText = todayName;
-
-        // Query 'exercises' for current day and week
+        // 1. Fetch exercises scheduled for today
         const { data: exercises, error } = await supabaseClient
             .from('exercises')
             .select('*')
@@ -152,6 +149,8 @@
         }
 
         if (!exercises || exercises.length === 0) {
+            document.getElementById('week-info').innerText = `Week: ${weekOption} | Today: Rest Day`;
+            document.getElementById('today-title').innerText = todayName;
             document.getElementById('workout-container').innerHTML = `
                 <div class="card" style="text-align:center;">
                     <h3>Rest day. No training plan for today</h3>
@@ -159,6 +158,16 @@
                 </div>`;
             return;
         }
+
+        // 2. Extract routine_type from the first available exercise for today
+        const currentRoutine = exercises[0].routine_type || "Workout";
+
+        // 3. Update text headers based on today's routine
+        // Subtitle shows the current Week rotation and Routine type
+        document.getElementById('week-info').innerText = `Week: ${weekOption} | Routine: ${currentRoutine}`;
+        
+        // Main title (inside the red box) displays the current day name
+        document.getElementById('today-title').innerText = todayName;
 
         // View generation for every exercise
         let html = '';
