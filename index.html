@@ -196,7 +196,7 @@
         document.getElementById('workout-container').innerHTML = html;
     }
 
-    // 5. Save series to base (With button ✅ / ❌)
+    // 5. Save series to base
     async function saveSeries(exerciseId, setNum, status) {
         const weightInput = document.getElementById(`w-${exerciseId}-${setNum}`).value;
         const repsInput = document.getElementById(`r-${exerciseId}-${setNum}`).value;
@@ -254,5 +254,6 @@
     // Startup
     checkUser();
 </script>
+<div>Created by Radoslaw</div>
 </body>
 </html>
