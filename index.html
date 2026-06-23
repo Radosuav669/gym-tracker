@@ -196,7 +196,7 @@
         document.getElementById('workout-container').innerHTML = html;
     }
 
-    // 5. Save series to base
+    // 5. Save series to base (Smart Update / Insert)
     async function saveSeries(exerciseId, setNum, status) {
         const weightInput = document.getElementById(`w-${exerciseId}-${setNum}`).value;
         const repsInput = document.getElementById(`r-${exerciseId}-${setNum}`).value;
@@ -208,23 +208,56 @@
 
         const todayDate = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
 
-        const { error } = await supabaseClient
+        // 1. Check if this specific set was already logged today
+        const { data: existingLog, error: fetchError } = await supabaseClient
             .from('workout_logs')
-            .insert([{
-                workout_date: todayDate,
-                exercise_id: exerciseId,
-                set_number: setNum,
-                weight: parseFloat(weightInput),
-                reps_done: parseInt(repsInput),
-                status: status
-            }]);
+            .select('id')
+            .eq('workout_date', todayDate)
+            .eq('exercise_id', exerciseId)
+            .eq('set_number', setNum)
+            .maybeSingle(); // Returns 1 record or null
 
-        if (error) {
-            alert("Could not save: " + error.message);
+        if (fetchError) {
+            alert("Error checking history: " + fetchError.message);
+            return;
+        }
+
+        if (existingLog) {
+            // 2. If it exists -> UPDATE existing row
+            const { error: updateError } = await supabaseClient
+                .from('workout_logs')
+                .update({
+                    weight: parseFloat(weightInput),
+                    reps_done: parseInt(repsInput),
+                    status: status
+                })
+                .eq('id', existingLog.id);
+
+            if (updateError) {
+                alert("Could not update: " + updateError.message);
+            } else {
+                alert(`Set ${setNum} updated to: ${status === 'Success' ? 'Success ✅' : 'Fail ❌'}`);
+                loadLastLoggedWorkout(exerciseId);
+            }
         } else {
-            // Success visual effect
-            alert(`Set ${setNum} saved as: ${status === 'Success' ? 'Success ✅' : 'Fail ❌'}`);
-            loadLastLoggedWorkout(exerciseId);
+            // 3. If it doesn't exist -> INSERT new row
+            const { error: insertError } = await supabaseClient
+                .from('workout_logs')
+                .insert([{
+                    workout_date: todayDate,
+                    exercise_id: exerciseId,
+                    set_number: setNum,
+                    weight: parseFloat(weightInput),
+                    reps_done: parseInt(repsInput),
+                    status: status
+                }]);
+
+            if (insertError) {
+                alert("Could not save: " + insertError.message);
+            } else {
+                alert(`Set ${setNum} saved as: ${status === 'Success' ? 'Success ✅' : 'Fail ❌'}`);
+                loadLastLoggedWorkout(exerciseId);
+            }
         }
     }
 
