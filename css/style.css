@@ -1,0 +1,146 @@
+:root {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --accent: #00adb5;
+    --text: #eeeeee;
+    --success: #2ecc71;
+    --fail: #e74c3c;
+    --input-bg: #333333;
+    --row-bg: #252525;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text);
+    margin: 0;
+    padding: 15px;
+}
+
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+h1, h2, h3 {
+    text-align: center;
+    color: var(--accent);
+    margin-top: 5px;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.input-group {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+input, button {
+    padding: 12px;
+    border-radius: 5px;
+    border: none;
+    margin-top: 5px;
+    font-size: 16px;
+}
+
+input {
+    background: var(--input-bg);
+    color: #ffffff;
+}
+
+button {
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Workout Application Specifics */
+#week-info {
+    text-align: center;
+    color: #888888;
+    margin-bottom: 20px;
+}
+
+.exercise-card {
+    border-left: 4px solid var(--accent);
+}
+
+.series-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--row-bg);
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 5px;
+}
+
+.series-inputs {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+    .series-inputs input {
+        width: 50px;
+        text-align: center;
+        padding: 6px;
+        margin: 0;
+    }
+
+.btn-status {
+    padding: 6px 12px;
+    font-size: 14px;
+    margin: 0 4px;
+    border-radius: 5px;
+    color: #ffffff;
+    font-weight: bold;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    line-height: 1.2;
+}
+
+    .btn-status:active {
+        opacity: 0.7;
+    }
+
+.btn-success {
+    background: var(--success);
+}
+
+.btn-fail {
+    background: var(--fail);
+}
+
+.logged-indicator {
+    font-size: 12px;
+    color: #888888;
+    text-align: center;
+    margin-top: 2px;
+}
+
+#btn-logout {
+    background: #333333;
+    margin-top: 30px;
+    width: 100%;
+    font-size: 14px;
+}
+
+.footer {
+    text-align: center;
+    font-size: 12px;
+    color: #555555;
+    margin-top: 20px;
+}

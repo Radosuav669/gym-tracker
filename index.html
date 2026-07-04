@@ -5,73 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Training Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --accent: #00adb5;
-            --text: #eeeeee;
-            --success: #2ecc71;
-            --fail: #e74c3c;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
-            margin: 0;
-            padding: 15px;
-        }
-        .container { max-width: 500px; margin: 0 auto; }
-        h1, h2, h3 { text-align: center; color: var(--accent); margin-top: 5px; }
-        .card {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .input-group { margin-bottom: 10px; display: flex; flex-direction: column; }
-        input, button {
-            padding: 12px;
-            border-radius: 5px;
-            border: none;
-            margin-top: 5px;
-            font-size: 16px;
-        }
-        input { background: #333; color: #fff; }
-        button { background: var(--accent); color: #fff; font-weight: bold; cursor: pointer; }
-        .hidden { display: none; }
-        
-        .exercise-card { border-left: 4px solid var(--accent); }
-        .series-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #252525;
-            padding: 8px;
-            margin: 8px 0;
-            border-radius: 5px;
-        }
-        .series-inputs { display: flex; gap: 5px; align-items: center; }
-        .series-inputs input { width: 50px; text-align: center; padding: 6px; margin: 0; }
-        .btn-status { 
-            padding: 6px 12px;
-            font-size: 14px;   
-            margin: 0 4px; 
-            border-radius: 5px;
-            color: #fff;
-            font-weight: bold;
-            transition: opacity 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            line-height: 1.2;
-        }
-        .btn-status:active { opacity: 0.7; }
-        .btn-success { background: #2ecc71; }
-        .btn-fail { background: #e74c3c; }
-        .btn-success { background: var(--success); }
-        .btn-fail { background: var(--fail); }
-        .logged-indicator { font-size: 12px; color: #888; text-align: center; margin-top: 2px; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -79,236 +13,30 @@
     <div id="login-box" class="card">
         <h2>Gym Tracker Login</h2>
         <div class="input-group">
-            <label>Email</label>
+            <label for="email">Email</label>
             <input type="email" id="email" placeholder="your@mail.com">
         </div>
         <div class="input-group">
-            <label>Password</label>
+            <label for="password">Password</label>
             <input type="password" id="password" placeholder="••••••••">
         </div>
-        <button onclick="login()">Log in</button>
+        <button id="btn-login">Log in</button>
     </div>
 
     <div id="app-box" class="hidden">
         <h1 id="today-title">Workout</h1>
-        <p id="week-info" style="text-align: center; color: #888; margin-bottom: 20px;"></p>
+        <p id="week-info"></p>
         
         <div id="workout-container"></div>
         
-        <button onclick="logout()" style="background: #333; margin-top: 30px; width: 100%; font-size: 14px;">Logout</button>
+        <button id="btn-logout">Logout</button>
     </div>
 </div>
 
-<script>
-    // 1. SUPABASE Configuration
-    const SUPABASE_URL = "https://qcoglqzmkzsuhrgvvuwj.supabase.co/"; 
-    const SUPABASE_KEY = "sb_publishable_Xzl3BD3Wk-ROYAR_GlobCQ_YrlsI412"; 
-    
-    // Client init
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<div class="footer">Created by Radoslaw</div>
 
-    // 2. Login and registration
-    async function login() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) alert("Error: " + error.message);
-        else checkUser();
-    }
-
-    async function logout() {
-        await supabaseClient.auth.signOut();
-        checkUser();
-    }
-
-    async function checkUser() {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-            document.getElementById('login-box').classList.add('hidden');
-            document.getElementById('app-box').classList.remove('hidden');
-            loadTodayWorkout();
-        } else {
-            document.getElementById('login-box').classList.remove('hidden');
-            document.getElementById('app-box').classList.add('hidden');
-        }
-    }
-
-    // 3. Logic for week rotation (Odd / Even)
-    function getWeekOption() {
-        const currentdate = new Date();
-        const oneJan = new Date(currentdate.getFullYear(), 0, 1);
-        const numberOfDays = Math.floor((currentdate - oneJan) / (24 * 60 * 60 * 1000));
-        const weekNumber = Math.ceil((currentdate.getDay() + 1 + numberOfDays) / 7);
-        return (weekNumber % 2 === 0) ? 'Even' : 'Odd';
-    }
-
-    // 4. Fetching exercises for a day from db
-    async function loadTodayWorkout() {
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const now = new Date();
-        const todayName = days[now.getDay()];
-        const weekOption = getWeekOption();
-        
-        // 1. Fetch exercises scheduled for today
-        const { data: exercises, error } = await supabaseClient
-            .from('exercises')
-            .select('*')
-            .eq('day', todayName)
-            .eq('week_option', weekOption);
-
-        if (error) {
-            document.getElementById('workout-container').innerHTML = `<p>Error loading data: ${error.message}</p>`;
-            return;
-        }
-
-        if (!exercises || exercises.length === 0) {
-            document.getElementById('week-info').innerText = `Week: ${weekOption} | Today: Rest Day`;
-            document.getElementById('today-title').innerText = todayName;
-            document.getElementById('workout-container').innerHTML = `
-                <div class="card" style="text-align:center;">
-                    <h3>Rest day. No training plan for today</h3>
-                    <p>In database there are no exercises assigned for: <strong>${todayName} (${weekOption})</strong>.</p>
-                </div>`;
-            return;
-        }
-
-        // 2. Extract routine_type from the first available exercise for today
-        const currentRoutine = exercises[0].routine_type || "Workout";
-
-        // 3. Update text headers based on today's routine
-        // Subtitle shows the current Week rotation and Routine type
-        document.getElementById('week-info').innerText = `Week: ${weekOption} | Routine: ${currentRoutine}`;
-        
-        // Main title (inside the red box) displays the current day name
-        document.getElementById('today-title').innerText = todayName;
-
-        // View generation for every exercise
-        let html = '';
-        exercises.forEach(ex => {
-            html += `
-                <div class="card exercise-card">
-                    <h3>${ex.exercise_name}</h3>
-                    <p style="text-align:center; color:#aaa; margin:0;">Target sets: ${ex.target_sets}x ${ex.target_reps}</p>
-                    <div id="history-${ex.id}" class="logged-indicator">Loading last result...</div>
-                    <div style="margin-top:10px;">
-            `;
-            
-            // Generating rows for that many sets as planned (target_sets)
-            for(let i = 1; i <= ex.target_sets; i++) {
-                html += `
-                    <div class="series-row">
-                        <span>Set ${i}</span>
-                        <div class="series-inputs">
-                            <input type="number" step="0.1" id="w-${ex.id}-${i}" placeholder="kg">
-                            <input type="number" id="r-${ex.id}-${i}" placeholder="reps">
-                        </div>
-                        <div>
-                            <button class="btn-status btn-success" onclick="saveSeries(${ex.id}, ${i}, 'Success')">✓</button>
-                            <button class="btn-status btn-fail" onclick="saveSeries(${ex.id}, ${i}, 'Fail')">✕</button>
-                        </div>
-                    </div>
-                `;
-            }
-            html += `</div></div>`;
-            
-            // Fetching last historical result for the exercises (in background)
-            loadLastLoggedWorkout(ex.id);
-        });
-
-        document.getElementById('workout-container').innerHTML = html;
-    }
-
-    // 5. Save series to base (Smart Update / Insert)
-    async function saveSeries(exerciseId, setNum, status) {
-        const weightInput = document.getElementById(`w-${exerciseId}-${setNum}`).value;
-        const repsInput = document.getElementById(`r-${exerciseId}-${setNum}`).value;
-        
-        if(!weightInput || !repsInput) {
-            alert("Please provide weight and reps for the set first!");
-            return;
-        }
-
-        const todayDate = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
-
-        // 1. Check if this specific set was already logged today
-        const { data: existingLog, error: fetchError } = await supabaseClient
-            .from('workout_logs')
-            .select('id')
-            .eq('workout_date', todayDate)
-            .eq('exercise_id', exerciseId)
-            .eq('set_number', setNum)
-            .maybeSingle(); // Returns 1 record or null
-
-        if (fetchError) {
-            alert("Error checking history: " + fetchError.message);
-            return;
-        }
-
-        if (existingLog) {
-            // 2. If it exists -> UPDATE existing row
-            const { error: updateError } = await supabaseClient
-                .from('workout_logs')
-                .update({
-                    weight: parseFloat(weightInput),
-                    reps_done: parseInt(repsInput),
-                    status: status
-                })
-                .eq('id', existingLog.id);
-
-            if (updateError) {
-                alert("Could not update: " + updateError.message);
-            } else {
-                alert(`Set ${setNum} updated to: ${status === 'Success' ? 'Success ✅' : 'Fail ❌'}`);
-                loadLastLoggedWorkout(exerciseId);
-            }
-        } else {
-            // 3. If it doesn't exist -> INSERT new row
-            const { error: insertError } = await supabaseClient
-                .from('workout_logs')
-                .insert([{
-                    workout_date: todayDate,
-                    exercise_id: exerciseId,
-                    set_number: setNum,
-                    weight: parseFloat(weightInput),
-                    reps_done: parseInt(repsInput),
-                    status: status
-                }]);
-
-            if (insertError) {
-                alert("Could not save: " + insertError.message);
-            } else {
-                alert(`Set ${setNum} saved as: ${status === 'Success' ? 'Success ✅' : 'Fail ❌'}`);
-                loadLastLoggedWorkout(exerciseId);
-            }
-        }
-    }
-
-    // 6. Fetching last registry
-    async function loadLastLoggedWorkout(exerciseId) {
-        const { data, error } = await supabaseClient
-            .from('workout_logs')
-            .select('workout_date, weight, reps_done, status')
-            .eq('exercise_id', exerciseId)
-            .order('workout_date', { ascending: false })
-            .order('set_number', { ascending: true })
-            .limit(5); // Fetching last 5 series for overview
-
-        const historyDiv = document.getElementById(`history-${exerciseId}`);
-        if (data && data.length > 0) {
-            let historyText = "Recently: ";
-            data.forEach(log => {
-                historyText += `[${log.weight}kg x ${log.reps_done} ${log.status === 'Success' ? '✅' : '❌'}] `;
-            });
-            historyDiv.innerText = historyText;
-            historyDiv.style.color = "#00adb5";
-        } else {
-            historyDiv.innerText = "No prior history for this exercise.";
-        }
-    }
-
-    // Startup
-    checkUser();
-</script>
-<div>Created by Radoslaw</div>
+<script src="js/supabase-config.js" defer></script>
+<script src="js/auth.js" defer></script>
+<script src="js/workout.js" defer></script>
 </body>
 </html>
