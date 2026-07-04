@@ -1,5 +1,6 @@
 # Ignore VS Code specific settings
 .vscode/
+.vs/
 
 # Ignore npm and yarn package directories and lock files
 node_modules/
