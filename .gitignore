@@ -1,0 +1,16 @@
+# Ignore VS Code specific settings
+.vscode/
+
+# Ignore npm and yarn package directories and lock files
+node_modules/
+package-lock.json
+yarn.lock
+
+# Ignore build artifacts
+build/
+dist/
+*.min.*
+
+# Ignore temporary files
+*.tmp
+*.log
