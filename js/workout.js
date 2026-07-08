@@ -160,21 +160,34 @@ async function loadLastLoggedWorkout(exerciseId) {
 
     const latestDate = dateData[0].workout_date;
 
+    const todayDate = new Date().toISOString().split('T')[0];
+
+
     // 2. Fetch all entries (sets) only for this latest date
     const { data, error } = await supabaseClient
         .from('workout_logs')
-        .select('workout_date, weight, reps_done, status')
+        .select('weight, reps_done, status')
         .eq('exercise_id', exerciseId)
         .eq('workout_date', latestDate)
         .order('set_number', { ascending: true });
 
     if (data && data.length > 0) {
-        let historyText = "Recently: "; 
+        let historyText = ""; 
+        
+        // Logic to determine if the latest date is today or not, and set the color accordingly
+        if (latestDate === todayDate) {
+            historyText = "Today: "; 
+            historyDiv.style.color = "var(--success)"; 
+        } else {
+            historyText = "Recently: ";
+            historyDiv.style.color = "#888888";
+        }
+
         data.forEach(log => {
             historyText += `[${log.weight}kg x ${log.reps_done} ${log.status === 'Success' ? '✅' : '❌'}] `;
         });
+        
         historyDiv.innerText = historyText;
-        historyDiv.style.color = "var(--accent)"; 
     } else {
         historyDiv.innerText = "No prior history for this exercise.";
         historyDiv.style.color = "#888888";
