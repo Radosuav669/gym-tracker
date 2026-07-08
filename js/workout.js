@@ -18,7 +18,8 @@ async function loadTodayWorkout() {
         .from('exercises')
         .select('*')
         .eq('day', todayName)
-        .eq('week_option', weekOption);
+        .eq('week_option', weekOption)
+        .order('order_index', { ascending: true });
 
     if (error) {
         document.getElementById('workout-container').innerHTML = `<p>Error loading data: ${error.message}</p>`;
