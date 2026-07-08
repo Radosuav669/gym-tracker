@@ -10,6 +10,8 @@ yarn.lock
 # Ignore build artifacts
 build/
 dist/
+obj/
+Properties/
 *.min.*
 
 # Ignore temporary files

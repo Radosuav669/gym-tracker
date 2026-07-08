@@ -141,22 +141,40 @@ async function saveSeries(exerciseId, setNum, status) {
 }
 
 async function loadLastLoggedWorkout(exerciseId) {
+    // 1. Find last training date for this exercise
+    const { data: dateData, error: dateError } = await supabaseClient
+        .from('workout_logs')
+        .select('workout_date')
+        .eq('exercise_id', exerciseId)
+        .order('workout_date', { ascending: false })
+        .limit(1);
+
+    const historyDiv = document.getElementById(`history-${exerciseId}`);
+
+    // If no data is found, display a default message
+    if (dateError || !dateData || dateData.length === 0) {
+        historyDiv.innerText = "No prior history for this exercise.";
+        historyDiv.style.color = "#888888";
+        return;
+    }
+
+    const latestDate = dateData[0].workout_date;
+
+    // 2. Fetch all entries (sets) only for this latest date
     const { data, error } = await supabaseClient
         .from('workout_logs')
         .select('workout_date, weight, reps_done, status')
         .eq('exercise_id', exerciseId)
-        .order('workout_date', { ascending: false })
-        .order('set_number', { ascending: true })
-        .limit(5);
+        .eq('workout_date', latestDate)
+        .order('set_number', { ascending: true });
 
-    const historyDiv = document.getElementById(`history-${exerciseId}`);
     if (data && data.length > 0) {
-        let historyText = "Recently: ";
+        let historyText = "Recently: "; 
         data.forEach(log => {
             historyText += `[${log.weight}kg x ${log.reps_done} ${log.status === 'Success' ? '✅' : '❌'}] `;
         });
         historyDiv.innerText = historyText;
-        historyDiv.style.color = "var(--accent)"; // Pull color variables cleanly
+        historyDiv.style.color = "var(--accent)"; 
     } else {
         historyDiv.innerText = "No prior history for this exercise.";
         historyDiv.style.color = "#888888";
