@@ -142,55 +142,46 @@ async function saveSeries(exerciseId, setNum, status) {
 }
 
 async function loadLastLoggedWorkout(exerciseId) {
-    // 1. Find last training date for this exercise
-    const { data: dateData, error: dateError } = await supabaseClient
+    // Fetch the last logged workout for the given exercise, grouped by set number, and display it in the history div.  
+    const { data, error } = await supabaseClient
         .from('workout_logs')
-        .select('workout_date')
+        .select('workout_date, set_number, weight, reps_done, status')
         .eq('exercise_id', exerciseId)
         .order('workout_date', { ascending: false })
-        .limit(1);
+        .limit(20); 
 
     const historyDiv = document.getElementById(`history-${exerciseId}`);
-
-    // If no data is found, display a default message
-    if (dateError || !dateData || dateData.length === 0) {
-        historyDiv.innerText = "No prior history for this exercise.";
+    
+    if (error || !data || data.length === 0) {
+        historyDiv.innerHTML = "No prior history for this exercise.";
         historyDiv.style.color = "#888888";
         return;
     }
 
-    const latestDate = dateData[0].workout_date;
-
     const todayDate = new Date().toISOString().split('T')[0];
 
-
-    // 2. Fetch all entries (sets) only for this latest date
-    const { data, error } = await supabaseClient
-        .from('workout_logs')
-        .select('weight, reps_done, status')
-        .eq('exercise_id', exerciseId)
-        .eq('workout_date', latestDate)
-        .order('set_number', { ascending: true });
-
-    if (data && data.length > 0) {
-        let historyText = ""; 
-        
-        // Logic to determine if the latest date is today or not, and set the color accordingly
-        if (latestDate === todayDate) {
-            historyText = "Today: "; 
-            historyDiv.style.color = "var(--success)"; 
-        } else {
-            historyText = "Recently: ";
-            historyDiv.style.color = "#888888";
+    // 1. Group the results by set number, keeping only the latest entry for each set
+    const latestSets = new Map();
+    data.forEach(log => {
+        if (!latestSets.has(log.set_number)) {
+            latestSets.set(log.set_number, log);
         }
+    });
 
-        data.forEach(log => {
-            historyText += `[${log.weight}kg x ${log.reps_done} ${log.status === 'Success' ? '✅' : '❌'}] `;
-        });
+    // 2. Sort the sets by set number to display them in order
+    const sortedSets = Array.from(latestSets.values()).sort((a, b) => a.set_number - b.set_number);
+
+    // 3. Budujemy HTML, kolorując każdą serię osobno na podstawie jej daty
+    let historyHTML = ""; 
+    
+    sortedSets.forEach(log => {
+        const isToday = log.workout_date === todayDate;
+        const color = isToday ? "var(--success)" : "#888888"; 
+        const icon = log.status === 'Success' ? '✅' : '❌';
         
-        historyDiv.innerText = historyText;
-    } else {
-        historyDiv.innerText = "No prior history for this exercise.";
-        historyDiv.style.color = "#888888";
-    }
+        historyHTML += `<span style="color: ${color}; margin-right: 4px;">[${log.weight}kg x ${log.reps_done} ${icon}]</span>`;
+    });
+    
+    historyDiv.innerHTML = historyHTML;
+    historyDiv.style.color = "#aaaaaa"; // Domyślny kolor dla ewentualnego przedrostka
 }
