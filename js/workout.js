@@ -1,4 +1,13 @@
 // Workout Logging and Rendering Logic
+async function getCurrentUserId() {
+    const { data: { user }, error } = await supabaseClient.auth.getUser();
+    if (error || !user) {
+        console.error("Error fetching user:", error);
+        return null;
+    }
+    return user.id;
+}
+
 
 function getWeekOption() {
     const currentdate = new Date();
@@ -9,6 +18,9 @@ function getWeekOption() {
 }
 
 async function loadTodayWorkout() {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const now = new Date();
     const todayName = days[now.getDay()];
@@ -17,6 +29,7 @@ async function loadTodayWorkout() {
     const { data: exercises, error } = await supabaseClient
         .from('exercises')
         .select('*')
+        .eq('user_id', userId)
         .eq('day', todayName)
         .eq('week_option', weekOption)
         .order('order_index', { ascending: true });
@@ -89,6 +102,9 @@ function attachWorkoutEventListeners() {
 }
 
 async function saveSeries(exerciseId, setNum, status) {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
     const weightInput = document.getElementById(`w-${exerciseId}-${setNum}`).value;
     const repsInput = document.getElementById(`r-${exerciseId}-${setNum}`).value;
 
@@ -128,6 +144,7 @@ async function saveSeries(exerciseId, setNum, status) {
         const { error: insertError } = await supabaseClient
             .from('workout_logs')
             .insert([{
+                user_id: userId,
                 workout_date: todayDate,
                 exercise_id: exerciseId,
                 set_number: setNum,
