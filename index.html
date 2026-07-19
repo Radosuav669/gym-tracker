@@ -24,11 +24,26 @@
     </div>
 
     <div id="app-box" class="hidden">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <select id="day-select" style="flex: 1; padding: 12px; background: var(--input-bg); color: white; border: none; border-radius: 5px; font-size: 16px;">
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+            </select>
+            <select id="week-select" style="flex: 1; padding: 12px; background: var(--input-bg); color: white; border: none; border-radius: 5px; font-size: 16px;">
+                <option value="Even">Even Week</option>
+                <option value="Odd">Odd Week</option>
+            </select>
+        </div>
+
         <h1 id="today-title">Workout</h1>
         <p id="week-info"></p>
-        
         <div id="workout-container"></div>
-        
+
         <button id="btn-logout">Logout</button>
     </div>
 </div>

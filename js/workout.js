@@ -18,21 +18,31 @@ function getWeekOption() {
 }
 
 async function loadTodayWorkout() {
-    const userId = await getCurrentUserId();
-    if (!userId) return;
-
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const now = new Date();
     const todayName = days[now.getDay()];
     const weekOption = getWeekOption();
 
+    document.getElementById('day-select').value = todayName;
+    document.getElementById('week-select').value = weekOption;
+
+    await loadWorkoutData();
+}
+
+async function loadWorkoutData() {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    const selectedDay = document.getElementById('day-select').value;
+    const selectedWeek = document.getElementById('week-select').value;
+
     const { data: exercises, error } = await supabaseClient
         .from('exercises')
         .select('*')
         .eq('user_id', userId)
-        .eq('day', todayName)
-        .eq('week_option', weekOption)
-        .order('order_index', { ascending: true });
+        .eq('day', selectedDay)          
+        .eq('week_option', selectedWeek)  
+        .order('order_index', { ascending: true }); 
 
     if (error) {
         document.getElementById('workout-container').innerHTML = `<p>Error loading data: ${error.message}</p>`;
@@ -40,19 +50,19 @@ async function loadTodayWorkout() {
     }
 
     if (!exercises || exercises.length === 0) {
-        document.getElementById('week-info').innerText = `Week: ${weekOption} | Today: Rest Day`;
-        document.getElementById('today-title').innerText = todayName;
+        document.getElementById('week-info').innerText = `Week: ${selectedWeek}`;
+        document.getElementById('today-title').innerText = selectedDay;
         document.getElementById('workout-container').innerHTML = `
             <div class="card" style="text-align:center;">
-                <h3>Rest day. No training plan for today</h3>
-                <p>In database there are no exercises assigned for: <strong>${todayName} (${weekOption})</strong>.</p>
+                <h3>Rest day. No training plan</h3>
+                <p>In database there are no exercises assigned for: <strong>${selectedDay} (${selectedWeek})</strong>.</p>
             </div>`;
         return;
     }
 
     const currentRoutine = exercises[0].routine_type || "Workout";
-    document.getElementById('week-info').innerText = `Week: ${weekOption} | Routine: ${currentRoutine}`;
-    document.getElementById('today-title').innerText = todayName;
+    document.getElementById('week-info').innerText = `Week: ${selectedWeek} | Routine: ${currentRoutine}`;
+    document.getElementById('today-title').innerText = selectedDay;
 
     let html = '';
     exercises.forEach(ex => {
@@ -87,6 +97,17 @@ async function loadTodayWorkout() {
     document.getElementById('workout-container').innerHTML = html;
     attachWorkoutEventListeners();
 }
+
+// Event listener, for loading selected day-training to refresh view.
+document.addEventListener('DOMContentLoaded', () => {
+    const daySelect = document.getElementById('day-select');
+    const weekSelect = document.getElementById('week-select');
+
+    if (daySelect && weekSelect) {
+        daySelect.addEventListener('change', loadWorkoutData);
+        weekSelect.addEventListener('change', loadWorkoutData);
+    }
+});
 
 // Global Event delegation or explicit binding for dynamically built rows
 function attachWorkoutEventListeners() {
