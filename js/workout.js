@@ -122,7 +122,7 @@ function attachWorkoutEventListeners() {
     });
 }
 
-async function saveSeries(exerciseId, setNum, status) {
+async function saveSeries(exerciseId, setNum, targetRepsStr) {
     const userId = await getCurrentUserId();
     if (!userId) return;
 
