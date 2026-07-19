@@ -83,8 +83,7 @@ async function loadWorkoutData() {
                         <input type="number" id="r-${ex.id}-${i}" placeholder="reps">
                     </div>
                     <div>
-                        <button class="btn-status btn-success" data-ex="${ex.id}" data-set="${i}" data-status="Success">✓</button>
-                        <button class="btn-status btn-fail" data-ex="${ex.id}" data-set="${i}" data-status="Fail">✕</button>
+                        <button class="btn-save" data-ex="${ex.id}" data-set="${i}" data-target="${ex.target_reps}">Save</button>
                     </div>
                 </div>
             `;
@@ -112,12 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global Event delegation or explicit binding for dynamically built rows
 function attachWorkoutEventListeners() {
     const container = document.getElementById('workout-container');
-    container.querySelectorAll('.btn-status').forEach(button => {
+    container.querySelectorAll('.btn-save').forEach(button => {
         button.addEventListener('click', (e) => {
             const exId = e.currentTarget.getAttribute('data-ex');
             const setNum = e.currentTarget.getAttribute('data-set');
-            const status = e.currentTarget.getAttribute('data-status');
-            saveSeries(exId, setNum, status);
+            const targetReps = e.currentTarget.getAttribute('data-target');
+
+            saveSeries(exId, setNum, targetReps);
         });
     });
 }
@@ -133,6 +133,17 @@ async function saveSeries(exerciseId, setNum, status) {
         alert("Please provide weight and reps for the set first!");
         return;
     }
+
+    const repsDone = parseInt(repsInput);
+
+    let minTarget = 0;
+    if (targetRepsStr.includes('-')) {
+        minTarget = parseInt(targetRepsStr.split('-')[0]);
+    } else {
+        minTarget = parseInt(targetRepsStr);
+    }
+
+    const status = repsDone >= minTarget ? 'Success' : 'Fail';
 
     const todayDate = new Date().toISOString().split('T')[0];
 
