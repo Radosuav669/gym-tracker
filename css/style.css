@@ -100,29 +100,21 @@ button {
         margin: 0;
     }
 
-.btn-status {
+.btn-save {
+    background: var(--accent);
     padding: 6px 12px;
     font-size: 14px;
-    margin: 0 4px;
+    margin: 0;
     border-radius: 5px;
     color: #ffffff;
     font-weight: bold;
     transition: opacity 0.2s;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    line-height: 1.2;
 }
 
-    .btn-status:active {
+    .btn-save:active {
         opacity: 0.7;
     }
-
-.btn-success {
-    background: var(--success);
-}
-
-.btn-fail {
-    background: var(--fail);
-}
 
 .logged-indicator {
     font-size: 12px;
@@ -144,19 +136,3 @@ button {
     color: #555555;
     margin-top: 20px;
 }
-
-.btn-save {
-    background: var(--accent);
-    padding: 6px 12px;
-    font-size: 14px;
-    margin: 0;
-    border-radius: 5px;
-    color: #ffffff;
-    font-weight: bold;
-    transition: opacity 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-    .btn-save:active {
-        opacity: 0.7;
-    }
