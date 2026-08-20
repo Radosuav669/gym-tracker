@@ -69,7 +69,7 @@ async function loadWorkoutData() {
         html += `
             <div class="card exercise-card">
                 <h3>${ex.exercise_name}</h3>
-                <p style="text-align:center; color:#aaa; margin:0;">Target sets: ${ex.target_sets}x ${ex.target_reps}</p>
+                <p style="text-align:center; color:var(--muted-text); margin:0;">Target sets: ${ex.target_sets}x ${ex.target_reps}</p>
                 <div id="history-${ex.id}" class="logged-indicator">Loading last result...</div>
                 <div style="margin-top:10px;">
         `;
@@ -203,7 +203,6 @@ async function loadLastLoggedWorkout(exerciseId) {
     
     if (error || !data || data.length === 0) {
         historyDiv.innerHTML = "No prior history for this exercise.";
-        historyDiv.style.color = "#888888";
         return;
     }
 
@@ -225,12 +224,12 @@ async function loadLastLoggedWorkout(exerciseId) {
     
     sortedSets.forEach(log => {
         const isToday = log.workout_date === todayDate;
-        const color = isToday ? "var(--success)" : "#888888"; 
+        const color = isToday ? "var(--success)" : "var(--muted-text)"; 
         const icon = log.status === 'Success' ? '✅' : '❌';
         
         historyHTML += `<span style="color: ${color}; margin-right: 4px;">[${log.weight}kg x ${log.reps_done} ${icon}]</span>`;
     });
     
     historyDiv.innerHTML = historyHTML;
-    historyDiv.style.color = "#aaaaaa"; // Domyślny kolor dla ewentualnego przedrostka
 }
+

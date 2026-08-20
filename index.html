@@ -11,6 +11,7 @@
 <body>
 
 <div class="container">
+    <!-- Login Screen -->
     <div id="login-box" class="card">
         <h2>Gym Tracker Login</h2>
         <div class="input-group">
@@ -24,16 +25,8 @@
         <button id="btn-login">Log in</button>
     </div>
 
+    <!-- App Screen (hidden until logged in) -->
     <div id="app-box" class="hidden">
-        <div class="theme-selector-container">
-            <label for="theme-select">Theme</label>
-            <select id="theme-select">
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-                <option value="ocean">Ocean</option>
-            </select>
-        </div>
-
         <div class="selection-container">
             <select id="day-select">
                 <option value="Monday">Monday</option>
@@ -49,14 +42,21 @@
                 <option value="Odd">Odd Week</option>
             </select>
         </div>
-    </div>
-
 
         <h1 id="today-title">Workout</h1>
         <p id="week-info"></p>
         <div id="workout-container"></div>
 
         <button id="btn-logout">Logout</button>
+    </div>
+
+    <!-- Theme selector — always visible at bottom -->
+    <div class="theme-selector-container">
+        <select id="theme-select">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="ocean">Ocean</option>
+        </select>
     </div>
 </div>
 
