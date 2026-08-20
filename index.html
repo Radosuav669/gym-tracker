@@ -6,6 +6,7 @@
     <title>Training Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
 </head>
 <body>
 
@@ -24,6 +25,15 @@
     </div>
 
     <div id="app-box" class="hidden">
+        <div class="theme-selector-container">
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+                <option value="ocean">Ocean</option>
+            </select>
+        </div>
+
         <div class="selection-container">
             <select id="day-select">
                 <option value="Monday">Monday</option>

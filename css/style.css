@@ -1,4 +1,5 @@
-:root {
+/* Default Dark Theme */
+[data-theme="dark"] {
     --bg-color: #121212;
     --card-bg: #1e1e1e;
     --accent: #00adb5;
@@ -7,6 +8,33 @@
     --fail: #e74c3c;
     --input-bg: #333333;
     --row-bg: #252525;
+    --input-text: #ffffff;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+    --bg-color: #f0f2f5;
+    --card-bg: #ffffff;
+    --accent: #3b82f6;
+    --text: #1e293b;
+    --success: #16a34a;
+    --fail: #dc2626;
+    --input-bg: #e2e8f0;
+    --row-bg: #f1f5f9;
+    --input-text: #1e293b;
+}
+
+/* Ocean Theme */
+[data-theme="ocean"] {
+    --bg-color: #0a1628;
+    --card-bg: #142234;
+    --accent: #38bdf8;
+    --text: #cbd5e1;
+    --success: #34d399;
+    --fail: #f87171;
+    --input-bg: #1e293b;
+    --row-bg: #0f1d30;
+    --input-text: #cbd5e1;
 }
 
 body {
@@ -15,6 +43,7 @@ body {
     color: var(--text);
     margin: 0;
     padding: 15px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -34,6 +63,7 @@ h1, h2, h3 {
     border-radius: 8px;
     margin-bottom: 15px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: background-color 0.3s ease;
 }
 
 .input-group {
@@ -52,7 +82,7 @@ input, button {
 
 input {
     background: var(--input-bg);
-    color: #ffffff;
+    color: var(--input-text);
 }
 
 button {
@@ -64,6 +94,29 @@ button {
 
 .hidden {
     display: none;
+}
+
+/* Theme Selector */
+.theme-selector-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.theme-selector-container label {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.theme-selector-container select {
+    padding: 8px 12px;
+    background: var(--input-bg);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
 }
 
 /* Workout Application Specifics */
@@ -124,7 +177,7 @@ button {
 }
 
 #btn-logout {
-    background: #333333;
+    background: var(--input-bg);
     margin-top: 30px;
     width: 100%;
     font-size: 14px;
