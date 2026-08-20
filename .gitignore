@@ -15,5 +15,6 @@ Properties/
 *.min.*
 
 # Ignore temporary files
+.bionicrules/
 *.tmp
 *.log
