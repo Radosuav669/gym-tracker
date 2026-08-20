@@ -1,4 +1,21 @@
-/* Default Dark Theme */
+/* Default Theme — original cold gray + teal design */
+[data-theme="default"] {
+    --bg-color: #1a1a2e;
+    --card-bg: #232340;
+    --accent: #007d89;
+    --text: #ffffff;
+    --success: #2ecc71;
+    --fail: #f87171;
+    --input-bg: #2a2a45;
+    --row-bg: #1e1e32;
+    --input-text: #ffffff;
+    --select-text: #ffffff;
+    --button-text: #ffffff;
+    --muted-text: #888888;
+    --footer-text: #8a8a8a;
+}
+
+/* Dark Theme — warm brown/amber palette */
 [data-theme="dark"] {
     --bg-color: #1a1614;
     --card-bg: #25201b;
