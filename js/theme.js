@@ -31,4 +31,8 @@ initTheme();
 
 document.addEventListener('DOMContentLoaded', () => {
     bindThemeSelector();
+    // After DOM is ready, sync the selector value with the saved theme
+    const saved = localStorage.getItem(THEME_KEY) || 'dark';
+    const sel = document.getElementById('theme-select');
+    if (sel) sel.value = saved;
 });
