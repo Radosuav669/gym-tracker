@@ -237,8 +237,9 @@ button {
 .date-range {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     justify-content: center;
+    margin-bottom: 20px;
 }
 
 .date-picker-wrapper {
