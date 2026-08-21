@@ -231,3 +231,85 @@ button {
     font-size: 16px;
     cursor: pointer;
 }
+
+/* ─── Progress View ────────────────────────────────────── */
+
+.date-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.date-picker-wrapper {
+    cursor: pointer;
+}
+
+/* Native date input — visually hidden but keeps the calendar picker */
+.hidden-date-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Visible display showing dd/mm/yyyy format */
+.date-display {
+    display: inline-block;
+    padding: 8px 12px;
+    background: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    font-size: 14px;
+    min-width: 120px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ─── Chart Card ────────────────────────────────────── */
+.chart-card {
+    padding: 15px;
+    min-height: 300px;
+    position: relative;
+}
+
+#progress-chart {
+    max-height: 400px;
+}
+
+/* ─── Tab Navigation ───────────────────────────────────── */
+
+.tab-nav {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: var(--input-bg);
+    color: var(--muted-text);
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tab-btn.active {
+    background: var(--accent);
+    color: var(--button-text);
+    font-weight: bold;
+}
+
+/* Hide inactive tabs */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}

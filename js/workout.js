@@ -171,7 +171,10 @@ async function saveSeries(exerciseId, setNum, targetRepsStr) {
             .eq('id', existingLog.id);
 
         if (updateError) alert("Could not update: " + updateError.message);
-        else loadLastLoggedWorkout(exerciseId);
+        else {
+            loadLastLoggedWorkout(exerciseId);
+            if (typeof window.refreshProgress === 'function') window.refreshProgress();
+        }
     } else {
         const { error: insertError } = await supabaseClient
             .from('workout_logs')
@@ -186,7 +189,10 @@ async function saveSeries(exerciseId, setNum, targetRepsStr) {
             }]);
 
         if (insertError) alert("Could not save: " + insertError.message);
-        else loadLastLoggedWorkout(exerciseId);
+        else {
+            loadLastLoggedWorkout(exerciseId);
+            if (typeof window.refreshProgress === 'function') window.refreshProgress();
+        }
     }
 }
 

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Training Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <link rel="stylesheet" href="css/style.css">
 <script src="js/theme.js"></script>
 </head>
@@ -27,25 +28,56 @@
 
     <!-- App Screen (hidden until logged in) -->
     <div id="app-box" class="hidden">
-        <div class="selection-container">
-            <select id="day-select">
-                <option value="Monday">Monday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Friday">Friday</option>
-                <option value="Saturday">Saturday</option>
-                <option value="Sunday">Sunday</option>
-            </select>
-            <select id="week-select">
-                <option value="Even">Even Week</option>
-                <option value="Odd">Odd Week</option>
-            </select>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="workout">Workout</button>
+            <button class="tab-btn" data-tab="progress">Progress</button>
         </div>
 
-        <h1 id="today-title">Workout</h1>
-        <p id="week-info"></p>
-        <div id="workout-container"></div>
+        <!-- Workout Tab -->
+        <div id="tab-workout" class="tab-content active">
+            <div class="selection-container">
+                <select id="day-select">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+                <select id="week-select">
+                    <option value="Even">Even Week</option>
+                    <option value="Odd">Odd Week</option>
+                </select>
+            </div>
+
+            <h1 id="today-title">Workout</h1>
+            <p id="week-info"></p>
+            <div id="workout-container"></div>
+        </div>
+
+        <!-- Progress Tab -->
+        <div id="tab-progress" class="tab-content">
+            <h2>Weekly Training Volume</h2>
+            <div class="date-range">
+                <label class="date-picker-wrapper" title="From date">
+                    <input type="date" id="progress-date-from" class="hidden-date-input">
+                    <span class="date-display" id="progress-date-from-display">dd/mm/yyyy</span>
+                </label>
+                <span style="color:var(--muted-text);">—</span>
+                <label class="date-picker-wrapper" title="To date">
+                    <input type="date" id="progress-date-to" class="hidden-date-input">
+                    <span class="date-display" id="progress-date-to-display">dd/mm/yyyy</span>
+                </label>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="card chart-card">
+                <canvas id="progress-chart"></canvas>
+            </div>
+        </div>
 
         <button id="btn-logout">Logout</button>
     </div>
@@ -63,8 +95,9 @@
 
 <div class="footer">Created by Radoslaw</div>
 
-<script src="js/supabase-config.js?v=4" defer></script>
+<script src="js/supabase-config.js?v=5" defer></script>
 <script src="js/auth.js" defer></script>
+<script src="js/progress.js" defer></script>
 <script src="js/workout.js" defer></script>
 </body>
 </html>
