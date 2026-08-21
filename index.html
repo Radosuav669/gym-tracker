@@ -6,7 +6,7 @@
     <title>Training Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3">
 <script src="js/theme.js"></script>
 </head>
 <body>
@@ -80,6 +80,18 @@
         </div>
 
         <button id="btn-logout">Logout</button>
+
+        <!-- Exercise History Modal -->
+        <div id="history-modal" class="modal hidden">
+            <div class="modal-content card">
+                <div class="modal-header">
+                    <h3 id="history-modal-title">Exercise History</h3>
+                    <button class="btn-close" id="history-modal-close">&times;</button>
+                </div>
+                <div id="history-table-container"></div>
+                <canvas id="history-chart"></canvas>
+            </div>
+        </div>
     </div>
 
     <!-- Theme selector — always visible at bottom -->
@@ -95,9 +107,9 @@
 
 <div class="footer">Created by Radoslaw</div>
 
-<script src="js/supabase-config.js?v=5" defer></script>
+<script src="js/supabase-config.js" defer></script>
 <script src="js/auth.js" defer></script>
-<script src="js/progress.js" defer></script>
-<script src="js/workout.js" defer></script>
+<script src="js/progress.js?v=2" defer></script>
+<script src="js/workout.js?v=2" defer></script>
 </body>
 </html>

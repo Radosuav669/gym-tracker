@@ -68,7 +68,10 @@ async function loadWorkoutData() {
     exercises.forEach(ex => {
         html += `
             <div class="card exercise-card">
-                <h3>${ex.exercise_name}</h3>
+                <div class="exercise-header">
+                    <h3>${ex.exercise_name}</h3>
+                    <button class="btn-history" data-ex-id="${ex.id}" data-ex-name="${ex.exercise_name}" title="View history">⏱</button>
+                </div>
                 <p style="text-align:center; color:var(--muted-text); margin:0;">Target sets: ${ex.target_sets}x ${ex.target_reps}</p>
                 <div id="history-${ex.id}" class="logged-indicator">Loading last result...</div>
                 <div style="margin-top:10px;">
@@ -106,6 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
         daySelect.addEventListener('change', loadWorkoutData);
         weekSelect.addEventListener('change', loadWorkoutData);
     }
+
+    // History modal close button
+    const historyModalClose = document.getElementById('history-modal-close');
+    if (historyModalClose) {
+        historyModalClose.addEventListener('click', closeExerciseHistory);
+    }
 });
 
 // Global Event delegation or explicit binding for dynamically built rows
@@ -118,6 +127,15 @@ function attachWorkoutEventListeners() {
             const targetReps = e.currentTarget.getAttribute('data-target');
 
             saveSeries(exId, setNum, targetReps);
+        });
+    });
+
+    // History button handlers
+    container.querySelectorAll('.btn-history').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const exId = e.currentTarget.getAttribute('data-ex-id');
+            const exName = e.currentTarget.getAttribute('data-ex-name');
+            openExerciseHistory(exId, exName);
         });
     });
 }
@@ -237,5 +255,109 @@ async function loadLastLoggedWorkout(exerciseId) {
     });
     
     historyDiv.innerHTML = historyHTML;
+}
+
+// ─── Exercise History Modal ──────────────────────────────
+let historyChartInstance = null;
+
+async function openExerciseHistory(exerciseId, exName) {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    // Fetch all logs for this exercise (all dates), ordered by date ascending for chart timeline
+    const { data: logs, error } = await supabaseClient
+        .from('workout_logs')
+        .select('workout_date, set_number, weight, reps_done, status')
+        .eq('exercise_id', exerciseId)
+        .order('workout_date', { ascending: true });
+
+    // Resolve CSS theme variables for Chart.js config
+    const rootStyles = getComputedStyle(document.documentElement);
+    const resolvedAccent = rootStyles.getPropertyValue('--accent').trim() || '#4a9eff';
+    const resolvedMutedText = rootStyles.getPropertyValue('--muted-text').trim() || '#888';
+
+    const modal = document.getElementById('history-modal');
+    const titleEl = document.getElementById('history-modal-title');
+    const tableContainer = document.getElementById('history-table-container');
+
+    if (error || !logs || logs.length === 0) {
+        titleEl.textContent = exName;
+        tableContainer.innerHTML = `<p>No history found for ${exName}.</p>`;
+        // Clear any previous chart
+        destroyHistoryChart();
+        modal.classList.remove('hidden');
+        return;
+    }
+
+    titleEl.textContent = `${exName} — History`;
+
+    // Group logs by workout_date and compute per-session summary
+    const sessionsMap = new Map(); // date -> { sets: [], totalVolume, hasFail }
+    logs.forEach(log => {
+        if (!sessionsMap.has(log.workout_date)) {
+            sessionsMap.set(log.workout_date, { date: log.workout_date, sets: [], totalVolume: 0, hasFail: false });
+        }
+        const session = sessionsMap.get(log.workout_date);
+        session.sets.push(log);
+        session.totalVolume += (log.weight * log.reps_done);
+        if (log.status === 'Fail') session.hasFail = true;
+    });
+
+    // Sort sessions by date descending (most recent first) for table view
+    const sessions = Array.from(sessionsMap.values()).sort((a, b) => b.date.localeCompare(a.date));
+
+    // Build summary table
+    let tableHTML = `<table class="history-table"><thead><tr><th>Date</th><th>Total Volume (kg)</th><th>Sets</th><th>Status</th></tr></thead><tbody>`;
+    sessions.forEach(session => {
+        const statusClass = session.hasFail ? 'fail-row' : 'success-row';
+        const statusIcon = session.hasFail ? '❌' : '✅';
+        const formattedDate = new Date(session.date + 'T00:00:00').toLocaleDateString();
+        tableHTML += `<tr class="${statusClass}"><td>${formattedDate}</td><td>${session.totalVolume.toFixed(1)}</td><td>${session.sets.length}</td><td>${statusIcon}</td></tr>`;
+    });
+    tableHTML += `</tbody></table>`;
+    tableContainer.innerHTML = tableHTML;
+
+    // Build chart data (chronological order: oldest first)
+    const chronSessions = Array.from(sessionsMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+    destroyHistoryChart();
+
+    historyChartInstance = new Chart(document.getElementById('history-chart'), {
+        type: 'line',
+        data: {
+            labels: chronSessions.map(s => new Date(s.date + 'T00:00:00').toLocaleDateString()),
+            datasets: [{
+                label: 'Total Volume (kg)',
+                data: chronSessions.map(s => s.totalVolume),
+                borderColor: resolvedAccent,
+                backgroundColor: resolvedAccent + '1a', // 10% opacity hex
+                tension: 0.3,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+            scales: {
+                x: { ticks: { color: resolvedMutedText }, grid: { display: false } },
+                y: { beginAtZero: true, ticks: { color: resolvedMutedText } }
+            }
+        }
+    });
+
+    modal.classList.remove('hidden');
+}
+
+function closeExerciseHistory() {
+    destroyHistoryChart();
+    document.getElementById('history-table-container').innerHTML = '';
+    document.getElementById('history-modal').classList.add('hidden');
+}
+
+function destroyHistoryChart() {
+    if (historyChartInstance) {
+        historyChartInstance.destroy();
+        historyChartInstance = null;
+    }
 }
 
