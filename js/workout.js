@@ -9,19 +9,62 @@ async function getCurrentUserId() {
 }
 
 
-function getWeekOption() {
-    const currentdate = new Date();
-    const oneJan = new Date(currentdate.getFullYear(), 0, 1);
-    const numberOfDays = Math.floor((currentdate - oneJan) / (24 * 60 * 60 * 1000));
-    const weekNumber = Math.ceil((currentdate.getDay() + 1 + numberOfDays) / 7);
-    return (weekNumber % 2 === 0) ? 'Even' : 'Odd';
+
+// Cache for getWeekOption: store result per calendar day to avoid repeated DB queries.
+// { dateStr: "YYYY-MM-DD", option: "Odd"|"Even" }
+let weekOptionCache = null;
+
+// Determine Odd/Even training cycle based on full 7-day periods since the user's first logged workout.
+// This anchors the alternation to the actual program start, not to ISO week boundaries — so odd/even
+// never flips in the middle of a training block even when your start date falls mid-ISO-week.
+async function getWeekOption() {
+    // Use cached value if it's still for today
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (weekOptionCache && weekOptionCache.dateStr === todayStr) {
+        return weekOptionCache.option;
+    }
+
+    const userId = await getCurrentUserId();
+    if (!userId) {
+        weekOptionCache = { dateStr: todayStr, option: 'Odd' };
+        return 'Odd';
+    }
+
+    // Find the earliest logged workout date for this user
+    const { data: logs, error } = await supabaseClient
+        .from('workout_logs')
+        .select('workout_date')
+        .eq('user_id', userId)
+        .order('workout_date', { ascending: true })
+        .limit(1);
+
+    if (error || !logs || logs.length === 0) {
+        // No workout history — default to Odd
+        weekOptionCache = { dateStr: todayStr, option: 'Odd' };
+        return 'Odd';
+    }
+
+    const firstDate = new Date(logs[0].workout_date + 'T00:00:00');
+    const today = new Date();
+
+    // Normalize both dates to start-of-day (midnight local) to avoid DST / timezone drift.
+    firstDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const msPerDay = 86400000;
+    const elapsedDays = Math.round((today.getTime() - firstDate.getTime()) / msPerDay);
+    const elapsedWeeks = Math.floor(elapsedDays / 7);
+    const option = (elapsedWeeks % 2 === 0) ? 'Odd' : 'Even';
+
+    weekOptionCache = { dateStr: todayStr, option };
+    return option;
 }
 
 async function loadTodayWorkout() {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const now = new Date();
     const todayName = days[now.getDay()];
-    const weekOption = getWeekOption();
+    const weekOption = await getWeekOption();
 
     document.getElementById('day-select').value = todayName;
     document.getElementById('week-select').value = weekOption;
@@ -303,7 +346,7 @@ async function openExerciseHistory(exerciseId, exName) {
         if (log.status === 'Fail') session.hasFail = true;
     });
 
-    // Sort sessions by date descending (most recent first) for table view
+    // Sort sessions by workout_date descending (most recent first) for table view
     const sessions = Array.from(sessionsMap.values()).sort((a, b) => b.date.localeCompare(a.date));
 
     // Build summary table
@@ -360,4 +403,3 @@ function destroyHistoryChart() {
         historyChartInstance = null;
     }
 }
-
