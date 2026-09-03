@@ -8,56 +8,20 @@ async function getCurrentUserId() {
     return user.id;
 }
 
+function getISOWeekNumber(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    // Ustawienie na najbliższy czwartek: czwartek w bieżącym tygodniu określa rok ISO
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    // Obliczenie pełnych tygodni
+    return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
 
-
-// Cache for getWeekOption: store result per calendar day to avoid repeated DB queries.
-// { dateStr: "YYYY-MM-DD", option: "Odd"|"Even" }
-let weekOptionCache = null;
-
-// Determine Odd/Even training cycle based on full 7-day periods since the user's first logged workout.
-// This anchors the alternation to the actual program start, not to ISO week boundaries — so odd/even
-// never flips in the middle of a training block even when your start date falls mid-ISO-week.
 async function getWeekOption() {
-    // Use cached value if it's still for today
-    const todayStr = new Date().toISOString().slice(0, 10);
-    if (weekOptionCache && weekOptionCache.dateStr === todayStr) {
-        return weekOptionCache.option;
-    }
-
-    const userId = await getCurrentUserId();
-    if (!userId) {
-        weekOptionCache = { dateStr: todayStr, option: 'Odd' };
-        return 'Odd';
-    }
-
-    // Find the earliest logged workout date for this user
-    const { data: logs, error } = await supabaseClient
-        .from('workout_logs')
-        .select('workout_date')
-        .eq('user_id', userId)
-        .order('workout_date', { ascending: true })
-        .limit(1);
-
-    if (error || !logs || logs.length === 0) {
-        // No workout history — default to Odd
-        weekOptionCache = { dateStr: todayStr, option: 'Odd' };
-        return 'Odd';
-    }
-
-    const firstDate = new Date(logs[0].workout_date + 'T00:00:00');
     const today = new Date();
-
-    // Normalize both dates to start-of-day (midnight local) to avoid DST / timezone drift.
-    firstDate.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-
-    const msPerDay = 86400000;
-    const elapsedDays = Math.round((today.getTime() - firstDate.getTime()) / msPerDay);
-    const elapsedWeeks = Math.floor(elapsedDays / 7);
-    const option = (elapsedWeeks % 2 === 0) ? 'Odd' : 'Even';
-
-    weekOptionCache = { dateStr: todayStr, option };
-    return option;
+    const weekNumber = getISOWeekNumber(today);
+    
+    return (weekNumber % 2 !== 0) ? 'Odd' : 'Even';
 }
 
 async function loadTodayWorkout() {
