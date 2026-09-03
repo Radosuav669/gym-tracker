@@ -239,7 +239,6 @@ async function loadLastLoggedWorkout(exerciseId) {
 
     const todayDate = new Date().toISOString().split('T')[0];
 
-    // 1. Group the results by set number, keeping only the latest entry for each set
     const latestSets = new Map();
     data.forEach(log => {
         if (!latestSets.has(log.set_number)) {
@@ -247,10 +246,8 @@ async function loadLastLoggedWorkout(exerciseId) {
         }
     });
 
-    // 2. Sort the sets by set number to display them in order
     const sortedSets = Array.from(latestSets.values()).sort((a, b) => a.set_number - b.set_number);
 
-    // 3. Budujemy HTML, kolorując każdą serię osobno na podstawie jej daty
     let historyHTML = ""; 
     
     sortedSets.forEach(log => {
