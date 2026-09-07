@@ -248,17 +248,15 @@ async function loadLastLoggedWorkout(exerciseId) {
 
     const sortedSets = Array.from(latestSets.values()).sort((a, b) => a.set_number - b.set_number);
 
-    let historyHTML = ""; 
-    
+    const formattedDate = new Date(sortedSets[0].workout_date + 'T00:00:00').toLocaleDateString();
+
+    let setsText = "";
     sortedSets.forEach(log => {
-        const isToday = log.workout_date === todayDate;
-        const color = isToday ? "var(--success)" : "var(--muted-text)"; 
         const icon = log.status === 'Success' ? '✅' : '❌';
-        
-        historyHTML += `<span style="color: ${color}; margin-right: 4px;">[${log.weight}kg x ${log.reps_done} ${icon}]</span>`;
+        setsText += `${log.weight}kg x ${log.reps_done}${icon} `;
     });
-    
-    historyDiv.innerHTML = historyHTML;
+
+    historyDiv.innerHTML = `<strong>${formattedDate}</strong>&nbsp;${setsText}`;
 }
 
 // ─── Exercise History Modal ──────────────────────────────
@@ -295,28 +293,34 @@ async function openExerciseHistory(exerciseId, exName) {
 
     titleEl.textContent = `${exName} — History`;
 
-    // Group logs by workout_date and compute per-session summary
-    const sessionsMap = new Map(); // date -> { sets: [], totalVolume, hasFail }
+    // Group logs by workout_date, keeping sets for display
+    const sessionsMap = new Map();
     logs.forEach(log => {
         if (!sessionsMap.has(log.workout_date)) {
-            sessionsMap.set(log.workout_date, { date: log.workout_date, sets: [], totalVolume: 0, hasFail: false });
+            sessionsMap.set(log.workout_date, { date: log.workout_date, sets: [], hasFail: false });
         }
         const session = sessionsMap.get(log.workout_date);
         session.sets.push(log);
-        session.totalVolume += (log.weight * log.reps_done);
         if (log.status === 'Fail') session.hasFail = true;
     });
 
     // Sort sessions by workout_date descending (most recent first) for table view
     const sessions = Array.from(sessionsMap.values()).sort((a, b) => b.date.localeCompare(a.date));
 
-    // Build summary table
-    let tableHTML = `<table class="history-table"><thead><tr><th>Date</th><th>Total Volume (kg)</th><th>Sets</th><th>Status</th></tr></thead><tbody>`;
+    // Build summary table — show sets inline like "70kg x 8", no total volume column
+    let tableHTML = `<table class="history-table"><thead><tr><th>Date</th><th>Sets</th></tr></thead><tbody>`;
     sessions.forEach(session => {
         const statusClass = session.hasFail ? 'fail-row' : 'success-row';
-        const statusIcon = session.hasFail ? '❌' : '✅';
         const formattedDate = new Date(session.date + 'T00:00:00').toLocaleDateString();
-        tableHTML += `<tr class="${statusClass}"><td>${formattedDate}</td><td>${session.totalVolume.toFixed(1)}</td><td>${session.sets.length}</td><td>${statusIcon}</td></tr>`;
+
+        // Build inline sets display sorted by set number
+        session.sets.sort((a, b) => a.set_number - b.set_number);
+        const setsDisplay = session.sets.map(s => {
+            const icon = s.status === 'Success' ? '✅' : '❌';
+            return `${s.weight}kg x ${s.reps_done}${icon}`;
+        }).join(' &nbsp;');
+
+        tableHTML += `<tr class="${statusClass}"><td>${formattedDate}</td><td>${setsDisplay}</td></tr>`;
     });
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
@@ -330,8 +334,11 @@ async function openExerciseHistory(exerciseId, exName) {
         data: {
             labels: chronSessions.map(s => new Date(s.date + 'T00:00:00').toLocaleDateString()),
             datasets: [{
-                label: 'Total Volume (kg)',
-                data: chronSessions.map(s => s.totalVolume),
+                label: 'Avg Set Weight (kg)',
+                data: chronSessions.map(s => {
+                    const avgWeight = s.sets.reduce((sum, st) => sum + st.weight, 0) / s.sets.length;
+                    return Math.round(avgWeight * 10) / 10;
+                }),
                 borderColor: resolvedAccent,
                 backgroundColor: resolvedAccent + '1a', // 10% opacity hex
                 tension: 0.3,
