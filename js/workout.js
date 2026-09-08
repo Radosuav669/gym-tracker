@@ -248,15 +248,16 @@ async function loadLastLoggedWorkout(exerciseId) {
 
     const sortedSets = Array.from(latestSets.values()).sort((a, b) => a.set_number - b.set_number);
 
-    const formattedDate = new Date(sortedSets[0].workout_date + 'T00:00:00').toLocaleDateString();
-
-    let setsText = "";
+    let historyHTML = "";
     sortedSets.forEach(log => {
+        const isToday = log.workout_date === todayDate;
+        const color = isToday ? "var(--success)" : "var(--muted-text)";
         const icon = log.status === 'Success' ? '✅' : '❌';
-        setsText += `${log.weight}kg x ${log.reps_done}${icon} `;
+
+        historyHTML += `<span style="color: ${color}; margin-right: 4px;">[${log.weight}kg x ${log.reps_done}${icon}]</span>`;
     });
 
-    historyDiv.innerHTML = `<strong>${formattedDate}</strong>&nbsp;${setsText}`;
+    historyDiv.innerHTML = historyHTML;
 }
 
 // ─── Exercise History Modal ──────────────────────────────
