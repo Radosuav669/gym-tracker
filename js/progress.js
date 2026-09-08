@@ -108,7 +108,7 @@
         const dateTo = document.getElementById('progress-date-to');
 
         // Set hidden inputs to ISO dates, display spans show dd/mm/yyyy
-        const todayISO = new Date().toISOString().split('T')[0];
+        const todayISO = toLocalISODate();
         if (dateTo) {
             dateTo.value = todayISO;
             updateDateDisplaySpan(dateTo);
@@ -118,7 +118,7 @@
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
         if (dateFrom) {
-            dateFrom.value = sixMonthsAgo.toISOString().split('T')[0];
+            dateFrom.value = toLocalISODate(sixMonthsAgo);
             updateDateDisplaySpan(dateFrom);
         }
     }

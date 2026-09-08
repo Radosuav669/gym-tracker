@@ -52,7 +52,7 @@ async function loadWorkoutData() {
         .order('order_index', { ascending: true }); 
 
     if (error) {
-        document.getElementById('workout-container').innerHTML = `<p>Error loading data: ${error.message}</p>`;
+        document.getElementById('workout-container').innerHTML = `<p>Error loading data: ${escapeHtml(error.message)}</p>`;
         return;
     }
 
@@ -76,8 +76,8 @@ async function loadWorkoutData() {
         html += `
             <div class="card exercise-card">
                 <div class="exercise-header">
-                    <h3>${ex.exercise_name}</h3>
-                    <button class="btn-history" data-ex-id="${ex.id}" data-ex-name="${ex.exercise_name}" title="View history">⏱</button>
+                    <h3>${escapeHtml(ex.exercise_name)}</h3>
+                    <button class="btn-history" data-ex-id="${ex.id}" data-ex-name="${escapeHtml(ex.exercise_name)}" title="View history">⏱</button>
                 </div>
                 <p style="text-align:center; color:var(--muted-text); margin:0;">Target sets: ${ex.target_sets}x ${ex.target_reps}</p>
                 <div id="history-${ex.id}" class="logged-indicator">Loading last result...</div>
@@ -170,7 +170,7 @@ async function saveSeries(exerciseId, setNum, targetRepsStr) {
 
     const status = repsDone >= minTarget ? 'Success' : 'Fail';
 
-    const todayDate = new Date().toISOString().split('T')[0];
+    const todayDate = toLocalISODate();
 
     const { data: existingLog, error: fetchError } = await supabaseClient
         .from('workout_logs')
@@ -237,7 +237,7 @@ async function loadLastLoggedWorkout(exerciseId) {
         return;
     }
 
-    const todayDate = new Date().toISOString().split('T')[0];
+    const todayDate = toLocalISODate();
 
     const latestSets = new Map();
     data.forEach(log => {
@@ -285,7 +285,7 @@ async function openExerciseHistory(exerciseId, exName) {
 
     if (error || !logs || logs.length === 0) {
         titleEl.textContent = exName;
-        tableContainer.innerHTML = `<p>No history found for ${exName}.</p>`;
+        tableContainer.innerHTML = `<p>No history found for ${escapeHtml(exName)}.</p>`;
         // Clear any previous chart
         destroyHistoryChart();
         modal.classList.remove('hidden');
