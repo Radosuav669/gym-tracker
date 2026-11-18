@@ -89,8 +89,8 @@ async function loadWorkoutData() {
                 <div class="series-row">
                     <span>Set ${i}</span>
                     <div class="series-inputs">
-                        <input type="number" step="0.1" id="w-${ex.id}-${i}" placeholder="kg">
-                        <input type="number" id="r-${ex.id}-${i}" placeholder="reps">
+                        <input type="number" step="0.1" min="0" inputmode="decimal" id="w-${ex.id}-${i}" placeholder="kg">
+                        <input type="number" min="1" step="1" inputmode="numeric" id="r-${ex.id}-${i}" placeholder="reps">
                     </div>
                     <div>
                         <button class="btn-save" data-ex="${ex.id}" data-set="${i}" data-target="${ex.target_reps}">Save</button>
@@ -134,7 +134,7 @@ function attachWorkoutEventListeners() {
             const setNum = e.currentTarget.getAttribute('data-set');
             const targetReps = e.currentTarget.getAttribute('data-target');
 
-            saveSeries(exId, setNum, targetReps);
+            saveSeries(exId, setNum, targetReps, e.currentTarget);
         });
     });
 
@@ -148,27 +148,71 @@ function attachWorkoutEventListeners() {
     });
 }
 
-async function saveSeries(exerciseId, setNum, targetRepsStr) {
-    const userId = await getCurrentUserId();
-    if (!userId) return;
+/**
+ * Briefly shows the result of a save on the button itself ("Saved ✓" / "Failed ✗"),
+ * then restores it. Avoids blocking alert() dialogs, which are annoying on phones.
+ */
+function flashSaveButton(button, ok, label) {
+    if (!button) return;
+    const originalText = button.getAttribute('data-label') || button.textContent;
+    button.setAttribute('data-label', originalText);
 
-    const weightInput = document.getElementById(`w-${exerciseId}-${setNum}`).value;
-    const repsInput = document.getElementById(`r-${exerciseId}-${setNum}`).value;
+    button.textContent = label;
+    button.classList.remove('saved', 'failed');
+    button.classList.add(ok ? 'saved' : 'failed');
+    button.disabled = true;
 
-    if (!weightInput || !repsInput) {
-        alert("Please provide weight and reps for the set first!");
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('saved', 'failed');
+        button.disabled = false;
+    }, 1500);
+}
+
+async function saveSeries(exerciseId, setNum, targetRepsStr, button) {
+    const weightEl = document.getElementById(`w-${exerciseId}-${setNum}`);
+    const repsEl = document.getElementById(`r-${exerciseId}-${setNum}`);
+    if (!weightEl || !repsEl) return;
+
+    weightEl.classList.remove('input-error');
+    repsEl.classList.remove('input-error');
+
+    const weight = parseFloat(weightEl.value);
+    const repsDone = parseInt(repsEl.value, 10);
+
+    // Validate: highlight the offending fields instead of showing an alert
+    const weightValid = Number.isFinite(weight) && weight >= 0;
+    const repsValid = Number.isInteger(repsDone) && repsDone >= 1;
+    if (!weightValid || !repsValid) {
+        if (!weightValid) weightEl.classList.add('input-error');
+        if (!repsValid) repsEl.classList.add('input-error');
+        (weightValid ? repsEl : weightEl).focus();
+        flashSaveButton(button, false, 'Check ✗');
         return;
     }
 
-    const repsDone = parseInt(repsInput);
+    // Lock the button while saving so a double tap cannot create duplicate rows
+    if (button) button.disabled = true;
 
-    let minTarget = 0;
-    if (targetRepsStr.includes('-')) {
-        minTarget = parseInt(targetRepsStr.split('-')[0]);
+    const result = await persistSeries(exerciseId, setNum, targetRepsStr, weight, repsDone);
+
+    if (result.ok) {
+        flashSaveButton(button, true, 'Saved ✓');
+        loadLastLoggedWorkout(exerciseId);
+        if (typeof window.refreshProgress === 'function') window.refreshProgress();
     } else {
-        minTarget = parseInt(targetRepsStr);
+        console.error(result.message);
+        if (button) button.title = result.message;
+        flashSaveButton(button, false, 'Failed ✗');
     }
+}
 
+/** Inserts or updates today's log for a set. Returns { ok, message }. */
+async function persistSeries(exerciseId, setNum, targetRepsStr, weight, repsDone) {
+    const userId = await getCurrentUserId();
+    if (!userId) return { ok: false, message: 'Not logged in.' };
+
+    const minTarget = parseInt(String(targetRepsStr).split('-')[0], 10);
     const status = repsDone >= minTarget ? 'Success' : 'Fail';
 
     const todayDate = toLocalISODate();
@@ -176,31 +220,21 @@ async function saveSeries(exerciseId, setNum, targetRepsStr) {
     const { data: existingLog, error: fetchError } = await supabaseClient
         .from('workout_logs')
         .select('id')
+        .eq('user_id', userId)
         .eq('workout_date', todayDate)
         .eq('exercise_id', exerciseId)
         .eq('set_number', setNum)
         .maybeSingle();
 
-    if (fetchError) {
-        alert("Error checking history: " + fetchError.message);
-        return;
-    }
+    if (fetchError) return { ok: false, message: 'Error checking history: ' + fetchError.message };
 
     if (existingLog) {
         const { error: updateError } = await supabaseClient
             .from('workout_logs')
-            .update({
-                weight: parseFloat(weightInput),
-                reps_done: parseInt(repsInput),
-                status: status
-            })
+            .update({ weight: weight, reps_done: repsDone, status: status })
             .eq('id', existingLog.id);
 
-        if (updateError) alert("Could not update: " + updateError.message);
-        else {
-            loadLastLoggedWorkout(exerciseId);
-            if (typeof window.refreshProgress === 'function') window.refreshProgress();
-        }
+        if (updateError) return { ok: false, message: 'Could not update: ' + updateError.message };
     } else {
         const { error: insertError } = await supabaseClient
             .from('workout_logs')
@@ -209,17 +243,15 @@ async function saveSeries(exerciseId, setNum, targetRepsStr) {
                 workout_date: todayDate,
                 exercise_id: exerciseId,
                 set_number: setNum,
-                weight: parseFloat(weightInput),
-                reps_done: parseInt(repsInput),
+                weight: weight,
+                reps_done: repsDone,
                 status: status
             }]);
 
-        if (insertError) alert("Could not save: " + insertError.message);
-        else {
-            loadLastLoggedWorkout(exerciseId);
-            if (typeof window.refreshProgress === 'function') window.refreshProgress();
-        }
+        if (insertError) return { ok: false, message: 'Could not save: ' + insertError.message };
     }
+
+    return { ok: true, message: '' };
 }
 
 async function loadLastLoggedWorkout(exerciseId) {

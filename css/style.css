@@ -72,7 +72,18 @@ body {
     color: var(--text);
     margin: 0;
     padding: 15px;
+    /* Respect the notch / rounded corners on phones (needs viewport-fit=cover) */
+    padding-left: max(15px, env(safe-area-inset-left));
+    padding-right: max(15px, env(safe-area-inset-right));
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
+    -webkit-text-size-adjust: 100%;
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Touch: no double-tap zoom delay and no grey tap flash on interactive elements */
+button, input, select, label {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .container {
@@ -134,12 +145,13 @@ button {
 }
 
 .theme-selector-container select {
-    padding: 8px 16px;
+    padding: 10px 16px;
     background: var(--input-bg);
     color: var(--select-text);
     border: 1px solid var(--accent);
     border-radius: 5px;
-    font-size: 14px;
+    /* 16px prevents iOS Safari from auto-zooming the page when the select is tapped */
+    font-size: 16px;
     cursor: pointer;
 }
 
@@ -171,26 +183,67 @@ button {
 }
 
     .series-inputs input {
-        width: 50px;
+        width: 68px;
+        min-height: 44px;
+        box-sizing: border-box;
         text-align: center;
-        padding: 6px;
+        padding: 8px 4px;
         margin: 0;
+        border: 1px solid transparent;
+    }
+
+    /* Hide number spinners: they eat width and are useless on touch screens */
+    .series-inputs input[type="number"],
+    #plan-editor input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+
+    .series-inputs input::-webkit-outer-spin-button,
+    .series-inputs input::-webkit-inner-spin-button,
+    #plan-editor input::-webkit-outer-spin-button,
+    #plan-editor input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Highlight a missing / invalid value */
+    .series-inputs input.input-error {
+        border-color: var(--fail);
     }
 
 .btn-save {
     background: var(--accent);
-    padding: 6px 12px;
+    min-width: 64px;
+    min-height: 44px;
+    padding: 8px 12px;
     font-size: 14px;
     margin: 0;
     border-radius: 5px;
     color: var(--button-text);
     font-weight: bold;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, background-color 0.2s;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
     .btn-save:active {
         opacity: 0.7;
+    }
+
+    .btn-save:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+
+    /* Short feedback state after saving a set */
+    .btn-save.saved {
+        background: var(--success);
+        color: #ffffff;
+    }
+
+    .btn-save.failed {
+        background: var(--fail);
+        color: #ffffff;
     }
 
 .logged-indicator {
@@ -236,6 +289,7 @@ button {
 
 .date-range {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     justify-content: center;
@@ -243,6 +297,9 @@ button {
 }
 
 .date-picker-wrapper {
+    position: relative; /* anchors the hidden native date input so the picker opens in place */
+    flex: 1 1 120px;
+    max-width: 200px;
     cursor: pointer;
 }
 
@@ -257,14 +314,15 @@ button {
 
 /* Visible display showing dd/mm/yyyy format */
 .date-display {
-    display: inline-block;
-    padding: 8px 12px;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
     background: var(--input-bg);
     color: var(--input-text);
     border: 1px solid var(--accent);
     border-radius: 5px;
-    font-size: 14px;
-    min-width: 120px;
+    font-size: 16px;
     text-align: center;
     line-height: 1.5;
 }
@@ -282,14 +340,21 @@ button {
 
 /* ─── Tab Navigation ───────────────────────────────────── */
 
+/* Sticky so the tabs stay reachable while scrolling a long workout on a phone */
 .tab-nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
     gap: 5px;
     margin-bottom: 15px;
+    padding: 8px 0;
+    background: var(--bg-color);
 }
 
 .tab-btn {
     flex: 1;
+    min-height: 44px;
     padding: 12px;
     background: var(--input-bg);
     color: var(--muted-text);
@@ -323,6 +388,9 @@ button {
     left: 0;
     width: 100%;
     height: 100%;
+    height: 100dvh; /* dynamic viewport: excludes the mobile browser address bar */
+    box-sizing: border-box;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
@@ -338,7 +406,9 @@ button {
     width: 90%;
     max-width: 600px;
     max-height: 85vh;
+    max-height: 85dvh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 20px;
     border-radius: 10px;
 }
@@ -354,6 +424,9 @@ button {
     background: transparent;
     color: var(--text);
     font-size: 28px;
+    width: 44px;
+    height: 44px;
+    margin: 0;
     padding: 0;
     border: none;
     cursor: pointer;
@@ -380,8 +453,11 @@ button {
 .btn-history {
     background: transparent;
     color: var(--accent);
-    padding: 4px;
-    font-size: 16px;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
     border-radius: 4px;
     cursor: pointer;
     border: none;
@@ -390,9 +466,17 @@ button {
     transition: background-color 0.15s, transform 0.15s;
 }
 
-.btn-history:hover {
+.btn-history:active {
     background: var(--input-bg);
-    transform: scale(1.15);
+    transform: scale(0.92);
+}
+
+/* Hover only on devices that really hover, so it doesn't stay "stuck" after a tap */
+@media (hover: hover) {
+    .btn-history:hover {
+        background: var(--input-bg);
+        transform: scale(1.15);
+    }
 }
 
 /* ─── History Table ────────────────────────────────── */
@@ -519,16 +603,18 @@ button {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap; /* safety net for very narrow phones */
 }
 
 .plan-exercise-controls input {
     margin: 0;
-    padding: 6px;
+    padding: 8px 4px;
+    min-height: 40px;
     text-align: center;
 }
 
-.plan-sets { width: 52px; }
-.plan-reps { width: 72px; }
+.plan-sets { width: 48px; }
+.plan-reps { width: 64px; }
 
 .plan-exercise-controls span {
     color: var(--muted-text);
@@ -536,8 +622,10 @@ button {
 
 .btn-icon {
     margin: 0;
-    padding: 6px 9px;
-    font-size: 13px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 6px 8px;
+    font-size: 14px;
     background: var(--input-bg);
     color: var(--select-text);
 }
