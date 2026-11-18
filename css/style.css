@@ -429,3 +429,190 @@ button {
     max-height: 250px;
     margin-top: 10px;
 }
+
+/* --- Plan Editor ------------------------------------- */
+
+.plan-hint {
+    text-align: center;
+    color: var(--muted-text);
+    font-size: 13px;
+    margin: 0 0 10px;
+}
+
+.plan-schedule-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 4px;
+    margin-bottom: 15px;
+    table-layout: fixed;
+}
+
+.plan-schedule-table th {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: normal;
+    text-align: center;
+}
+
+.plan-schedule-table th[scope="row"] {
+    width: 40px;
+    text-align: left;
+}
+
+.plan-slot {
+    width: 100%;
+    margin: 0;
+    padding: 8px 4px;
+    font-size: 13px;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.plan-slot small {
+    color: var(--muted-text);
+    font-weight: normal;
+}
+
+.plan-slot.empty {
+    background: var(--row-bg);
+    color: var(--muted-text);
+    font-weight: normal;
+}
+
+.plan-slot.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
+#plan-editor label {
+    font-size: 13px;
+    color: var(--muted-text);
+}
+
+#plan-editor input[type="text"],
+#plan-editor input[type="number"] {
+    box-sizing: border-box;
+}
+
+#plan-editor .input-group input {
+    width: 100%;
+}
+
+.plan-exercise {
+    background: var(--row-bg);
+    border-radius: 5px;
+    padding: 8px;
+    margin: 8px 0;
+}
+
+.plan-exercise .plan-name {
+    width: 100%;
+    margin: 0 0 6px;
+    padding: 8px;
+}
+
+.plan-exercise-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.plan-exercise-controls input {
+    margin: 0;
+    padding: 6px;
+    text-align: center;
+}
+
+.plan-sets { width: 52px; }
+.plan-reps { width: 72px; }
+
+.plan-exercise-controls span {
+    color: var(--muted-text);
+}
+
+.btn-icon {
+    margin: 0;
+    padding: 6px 9px;
+    font-size: 13px;
+    background: var(--input-bg);
+    color: var(--select-text);
+}
+
+.btn-icon:first-of-type {
+    margin-left: auto;
+}
+
+.btn-icon:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.btn-icon-danger {
+    color: var(--fail);
+}
+
+.plan-empty {
+    text-align: center;
+    color: var(--muted-text);
+    font-size: 14px;
+}
+
+.btn-secondary {
+    background: var(--input-bg);
+    color: var(--select-text);
+}
+
+.btn-danger {
+    background: var(--fail);
+    color: #ffffff;
+    width: 100%;
+    margin-top: 10px;
+}
+
+#plan-add-exercise {
+    width: 100%;
+}
+
+.plan-save-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.plan-save-row button {
+    flex: 1;
+    margin-top: 0;
+}
+
+#plan-editor button:disabled:not(.btn-icon) {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.plan-status {
+    min-height: 18px;
+    margin: 8px 0 0;
+    font-size: 13px;
+    text-align: center;
+    color: var(--muted-text);
+}
+
+.plan-status.error {
+    color: var(--fail);
+}
+
+.plan-move-box {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid var(--input-bg);
+}
+
+.plan-move-box h4 {
+    margin: 0 0 10px;
+    text-align: center;
+    color: var(--accent);
+}

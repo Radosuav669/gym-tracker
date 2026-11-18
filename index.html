@@ -6,7 +6,7 @@
     <title>Training Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/style.css?v=4">
 <script src="js/theme.js"></script>
 </head>
 <body>
@@ -33,6 +33,7 @@
         <div class="tab-nav">
             <button class="tab-btn active" data-tab="workout">Workout</button>
             <button class="tab-btn" data-tab="progress">Progress</button>
+            <button class="tab-btn" data-tab="plan">Plan</button>
         </div>
 
         <!-- Workout Tab -->
@@ -79,6 +80,48 @@
             </div>
         </div>
 
+        <!-- Plan Tab (edit / create workouts and schedule) -->
+        <div id="tab-plan" class="tab-content">
+            <h2>Training Plan</h2>
+            <p class="plan-hint">Tap a slot to edit it. Empty slots (—) can be used to create a new workout.</p>
+            <div id="plan-schedule"></div>
+
+            <div class="card" id="plan-editor">
+                <div class="selection-container">
+                    <select id="plan-day-select"></select>
+                    <select id="plan-week-select"></select>
+                </div>
+
+                <div class="input-group">
+                    <label for="plan-routine">Workout name</label>
+                    <input type="text" id="plan-routine" placeholder="e.g. Push, Legs, Upper A" maxlength="60">
+                </div>
+
+                <div id="plan-exercises"></div>
+
+                <button id="plan-add-exercise" class="btn-secondary">+ Add exercise</button>
+
+                <div class="plan-save-row">
+                    <button id="plan-save">Save changes</button>
+                    <button id="plan-discard" class="btn-secondary">Discard</button>
+                </div>
+                <p id="plan-status" class="plan-status"></p>
+
+                <div class="plan-move-box">
+                    <h4>Change schedule</h4>
+                    <div class="selection-container">
+                        <select id="plan-target-day"></select>
+                        <select id="plan-target-week"></select>
+                    </div>
+                    <div class="plan-save-row">
+                        <button id="plan-move" class="btn-secondary">Move / Swap</button>
+                        <button id="plan-copy" class="btn-secondary">Copy</button>
+                    </div>
+                    <button id="plan-delete" class="btn-danger">Delete whole workout</button>
+                </div>
+            </div>
+        </div>
+
         <button id="btn-logout">Logout</button>
 
         <!-- Exercise History Modal -->
@@ -112,5 +155,6 @@
 <script src="js/auth.js" defer></script>
 <script src="js/progress.js?v=2" defer></script>
 <script src="js/workout.js?v=4" defer></script>
+<script src="js/plan.js?v=1" defer></script>
 </body>
 </html>
