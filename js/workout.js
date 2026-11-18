@@ -99,12 +99,13 @@ async function loadWorkoutData() {
             `;
         }
         html += `</div></div>`;
-
-        loadLastLoggedWorkout(ex.id);
     });
 
     document.getElementById('workout-container').innerHTML = html;
     attachWorkoutEventListeners();
+
+    // Load last results only after the cards exist in the DOM
+    exercises.forEach(ex => loadLastLoggedWorkout(ex.id));
 }
 
 // Event listener, for loading selected day-training to refresh view.
@@ -224,7 +225,7 @@ async function saveSeries(exerciseId, setNum, targetRepsStr) {
 async function loadLastLoggedWorkout(exerciseId) {
     // Fetch the sets of the most recent logged session (a single date) for the given exercise
     // and display them in the history div. Sets from older sessions are never mixed in.
-    const historyDiv = document.getElementById(`history-${exerciseId}`);
+    const historyDivId = `history-${exerciseId}`;
 
     const { data: latestRow, error: latestError } = await supabaseClient
         .from('workout_logs')
@@ -234,6 +235,8 @@ async function loadLastLoggedWorkout(exerciseId) {
         .limit(1)
         .maybeSingle();
 
+    // Look the element up after the await: the view may have been re-rendered meanwhile
+    let historyDiv = document.getElementById(historyDivId);
     if (!historyDiv) return;
 
     if (latestError || !latestRow) {
@@ -248,7 +251,8 @@ async function loadLastLoggedWorkout(exerciseId) {
         .eq('workout_date', latestRow.workout_date)
         .order('set_number', { ascending: true });
 
-    if (!historyDiv.isConnected) return;
+    historyDiv = document.getElementById(historyDivId);
+    if (!historyDiv) return;
 
     if (error || !data || data.length === 0) {
         historyDiv.innerHTML = "No prior history for this exercise.";
