@@ -345,8 +345,19 @@
                     order_index: i + 1,
                 }));
             if (newRows.length) {
-                const { error } = await supabaseClient.from('exercises').insert(newRows);
+                const { data: inserted, error } = await supabaseClient
+                    .from('exercises')
+                    .insert(newRows)
+                    .select('id, order_index');
                 if (error) throw error;
+
+                // Remember the new ids in the draft right away. If a later step (delete) fails
+                // and the user retries, these rows are treated as existing instead of being
+                // inserted a second time.
+                (inserted || []).forEach(created => {
+                    const row = draft.rows[created.order_index - 1];
+                    if (row && row.id === null) row.id = created.id;
+                });
             }
 
             // 3) delete removed rows

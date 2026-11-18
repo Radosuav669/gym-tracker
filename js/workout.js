@@ -10,10 +10,10 @@ async function getCurrentUserId() {
 
 function getISOWeekNumber(d) {
     const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    // Ustawienie na najbliższy czwartek: czwartek w bieżącym tygodniu określa rok ISO
+    // Shift to the nearest Thursday: the Thursday of the current week determines the ISO year
     date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
     const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    // Obliczenie pełnych tygodni
+    // Count full weeks since the start of the ISO year
     return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
 }
 
@@ -222,16 +222,34 @@ async function saveSeries(exerciseId, setNum, targetRepsStr) {
 }
 
 async function loadLastLoggedWorkout(exerciseId) {
-    // Fetch the last logged workout for the given exercise, grouped by set number, and display it in the history div.  
+    // Fetch the sets of the most recent logged session (a single date) for the given exercise
+    // and display them in the history div. Sets from older sessions are never mixed in.
+    const historyDiv = document.getElementById(`history-${exerciseId}`);
+
+    const { data: latestRow, error: latestError } = await supabaseClient
+        .from('workout_logs')
+        .select('workout_date')
+        .eq('exercise_id', exerciseId)
+        .order('workout_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (!historyDiv) return;
+
+    if (latestError || !latestRow) {
+        historyDiv.innerHTML = "No prior history for this exercise.";
+        return;
+    }
+
     const { data, error } = await supabaseClient
         .from('workout_logs')
         .select('workout_date, set_number, weight, reps_done, status')
         .eq('exercise_id', exerciseId)
-        .order('workout_date', { ascending: false })
-        .limit(20); 
+        .eq('workout_date', latestRow.workout_date)
+        .order('set_number', { ascending: true });
 
-    const historyDiv = document.getElementById(`history-${exerciseId}`);
-    
+    if (!historyDiv.isConnected) return;
+
     if (error || !data || data.length === 0) {
         historyDiv.innerHTML = "No prior history for this exercise.";
         return;
@@ -239,17 +257,8 @@ async function loadLastLoggedWorkout(exerciseId) {
 
     const todayDate = toLocalISODate();
 
-    const latestSets = new Map();
-    data.forEach(log => {
-        if (!latestSets.has(log.set_number)) {
-            latestSets.set(log.set_number, log);
-        }
-    });
-
-    const sortedSets = Array.from(latestSets.values()).sort((a, b) => a.set_number - b.set_number);
-
     let historyHTML = "";
-    sortedSets.forEach(log => {
+    data.forEach(log => {
         const isToday = log.workout_date === todayDate;
         const color = isToday ? "var(--success)" : "var(--muted-text)";
         const icon = log.status === 'Success' ? '✅' : '❌';

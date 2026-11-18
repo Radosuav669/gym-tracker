@@ -41,7 +41,19 @@
 
     async function initProgressView() {
         setDefaultDateRange();
-        await renderWeeklyVolume(await getCurrentUserId());
+        await refreshChartFromFilters();
+    }
+
+    /** Reads the current date filter values and re-renders the chart for the logged-in user */
+    async function refreshChartFromFilters() {
+        const fromInput = document.getElementById('progress-date-from');
+        const toInput = document.getElementById('progress-date-to');
+        const userId = await getCurrentUserId();
+        await renderWeeklyVolume(
+            userId,
+            fromInput ? fromInput.value : '',
+            toInput ? toInput.value : ''
+        );
     }
 
     function initProgressFilters() {
@@ -51,34 +63,49 @@
         if (fromInput) {
             fromInput.addEventListener('change', () => {
                 updateDateDisplaySpan(fromInput);
-                renderWeeklyVolume(getCurrentUserId());
+                refreshChartFromFilters();
             });
         }
         if (toInput) {
             toInput.addEventListener('change', () => {
                 updateDateDisplaySpan(toInput);
-                renderWeeklyVolume(getCurrentUserId());
+                refreshChartFromFilters();
             });
         }
     }
 
     // ─── Data Fetching ──────────────────────────────────────────────
 
-    /** Fetches workout logs for a user within an optional date range */
+    // Supabase caps a single response at 1000 rows by default, so fetch in pages.
+    const PAGE_SIZE = 1000;
+
+    /** Fetches ALL workout logs for a user within an optional date range (paginated) */
     async function fetchWorkoutLogs(userId, dateFrom, dateTo) {
         if (!userId) return [];
 
-        let query = supabaseClient
-            .from('workout_logs')
-            .select('workout_date, exercise_id, set_number, weight, reps_done, status')
-            .eq('user_id', userId);
+        const all = [];
+        for (let offset = 0; ; offset += PAGE_SIZE) {
+            let query = supabaseClient
+                .from('workout_logs')
+                .select('id, workout_date, exercise_id, set_number, weight, reps_done, status')
+                .eq('user_id', userId);
 
-        if (dateFrom) query = query.gte('workout_date', dateFrom);
-        if (dateTo) query = query.lte('workout_date', dateTo);
+            if (dateFrom) query = query.gte('workout_date', dateFrom);
+            if (dateTo) query = query.lte('workout_date', dateTo);
 
-        const { data, error } = await query.order('workout_date', { ascending: true });
-        if (error) { console.error(error); return []; }
-        return data || [];
+            // Order by id as a tiebreaker so pages are stable and never skip/duplicate rows
+            const { data, error } = await query
+                .order('workout_date', { ascending: true })
+                .order('id', { ascending: true })
+                .range(offset, offset + PAGE_SIZE - 1);
+
+            if (error) { console.error(error); return []; }
+            if (!data || !data.length) break;
+
+            all.push(...data);
+            if (data.length < PAGE_SIZE) break;
+        }
+        return all;
     }
 
     // ─── Date Format Helpers ────────────────────────────────────────
@@ -212,7 +239,8 @@
         // Format week labels nicely (e.g., "Week 23" or date range)
         const labels = sortedWeeks.map(([key]) => {
             const parts = key.split('-');
-            return `W${parts[1]} (${parts[0]})`;
+            // parts[1] already contains the "W" prefix (e.g. "W13")
+            return `${parts[1]} (${parts[0]})`;
         });
         const values = sortedWeeks.map(([, val]) => Math.round(val));
 
